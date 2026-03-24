@@ -1,8 +1,10 @@
 from langchain_community.chat_models import ChatOpenAI
 from typing import Optional, Any
 import os
+from dotenv import load_dotenv
 
-os.environ["OPENROUTER_API_KEY"] = "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"
+# Load environment variables from .env if present.
+load_dotenv()
 
 class ChatModel(ChatOpenAI):
     """
@@ -15,12 +17,17 @@ class ChatModel(ChatOpenAI):
             openai_api_base: str="https://openrouter.ai/api/v1",
             **kwargs: Any):
         openai_api_key = openai_api_key or os.getenv('OPENROUTER_API_KEY')
-        super().__init__(
-            openai_api_base=openai_api_base,
-            openai_api_key=openai_api_key,
-            model_name=model_name,
-            **kwargs
-        )
+        if not openai_api_key:
+            raise ValueError(
+                "OPENROUTER_API_KEY is not set. Add it to your environment or .env file."
+            )
+        model_kwargs = {
+            "openai_api_base": openai_api_base,
+            "openai_api_key": openai_api_key,
+            "model_name": model_name,
+            **kwargs,
+        }
+        super().__init__(**model_kwargs)
 
 def get_model(model_name: str = "google/gemma-3-27b-it:free") -> ChatModel:
     """
